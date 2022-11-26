@@ -10,6 +10,8 @@ class Hands_divider:
 		self.suit_club = [False for i in range(13)]
 		self.hands = []
 		self.four_of_a_kind = []
+		self.three_of_a_kind = []
+		self.pairs = []
 		self.have_straight_flush = False
 		self.suit_correspondence = {'S': self.suit_spade, 'H': self.suit_heart, 'D': self.suit_diamond, 'C': self.suit_club}
 		self.valid_checker(cards)
@@ -34,6 +36,9 @@ class Hands_divider:
 			suit[value] = True
 
 	def last_hand_checker(self):
+		for i in self.four_of_a_kind:
+			for suit in self.suit_correspondence.values():
+				suit[i-1] = False
 		# If there is no four-of-a-kind
 		if len(self.hands) == 10:
 			for key, suit in self.suit_correspondence.items():
@@ -193,21 +198,39 @@ class Hands_divider:
 			else:
 				self.hands = hands[5:] + hands[:5]
 
-	def four_of_a_Kind_handler(self):
+	def same_kind_finder(self):
 		for i in range(12, -1, -1):
-			is_four = True
+			count = 0
 			for suit in self.suit_correspondence.values():
-				if suit[i] == False:
-					is_four = False
-					break
-			if is_four:
+				if suit[i]:
+					count += 1
+			if count == 4:
 				print("Four-of-a-kind found at", i+1)
 				self.four_of_a_kind += [i+1]
-				for suit in self.suit_correspondence.values():
-					suit[i] = False
+			if count == 3:
+				print("Three-of-a-kind found at", i+1)
+				self.three_of_a_kind += [i+1]
+			if count == 2:
+				print("pair found at", i+1)
+				self.pairs += [i+1]
+		return self.four_of_a_kind, self.three_of_a_kind, self.pairs
 
 	def full_house_handler(self):
-		pass
+		for i in range(12, -1, -1):
+			count = 0
+			for suit in self.suit_correspondence.values():
+				if suit[i]:
+					count += 1
+			if count == 3:
+				self.three_of_a_kind += [i]
+				if len(self.three_of_a_kind) == 2:
+					break
+		for suit in self.suit_correspondence.values():
+			for i in self.three_of_a_kind:
+				if suit[i]:
+					suit[i] = False
+		
+				# If no pairs
 
 	def flush_handler(self):
 		pass
@@ -233,15 +256,12 @@ class Hands_divider:
 			return 0 if card1[0] > card2[0] else 1
 
 	def divide(self):
+		self.same_kind_finder()
 		self.straight_flush_handler()
 		if self.last_hand_checker():
 			self.hands.reverse()
 			return self.hands
 		# self.empty_suit_updator()
-		self.four_of_a_Kind_handler()
-		if self.last_hand_checker():
-			self.hands.reverse()
-			return self.hands
 		# self.full_house_handler()
 		# self.flush_handler()
 		# self.straight_handler()
@@ -267,5 +287,6 @@ if __name__ == '__main__':
 	# cards_divider = Hands_divider(['H13', 'H5', 'C5', 'H9', 'S2', 'C13', 'C8', 'S5', 'S1', 'S3', 'S4', 'D13', 'S13'])
 	cards_divider = Hands_divider(['H13', 'H5', 'H8', 'H9', 'H1', 'C13', 'C8', 'S5', 'S1', 'D1', 'C1', 'D13', 'S13'])
 	cards_divider.display_cards()
+	# print(cards_divider.same_kind_finder())
 	print(cards_divider.divide())
 	cards_divider.display_cards()
