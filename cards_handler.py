@@ -50,24 +50,25 @@ class Hands_divider:
 				# Search pair from large to small
 				for i in range(12, -1, -1):
 					count = 0
-					for suit in self.suit_correspondence.values:
+					for suit in self.suit_correspondence.values():
 						if suit[i]:
 							count += 1
 					# If a pair is found
 					if count > 1:
 						# Take the pair out and break
-						for key, suit in self.suit_correspondence.items:
+						for key, suit in self.suit_correspondence.items():
 							if suit[i]:
 								pair += [f'{key}{i+1}']
 								suit[i] = False
-							break
+						break
 				# A straight-flush plus the four-of-a-kind
 				self.hands += [f'S{self.four_of_a_kind[0]}', f'H{self.four_of_a_kind[0]}', f'D{self.four_of_a_kind[0]}', f'C{self.four_of_a_kind[0]}']
 				# Plus the rest cards
-				for key, suit in self.suit_correspondence.items:
-					if suit[i]:
-						self.hands += [f'{key}{i+1}']
-						suit[i] = False
+				for key, suit in self.suit_correspondence.items():
+					for i in range(13):
+						if suit[i]:
+							self.hands += [f'{key}{i+1}']
+							suit[i] = False
 				# Plus the pair
 				self.hands += pair
 			# If there is no straight-flush
@@ -77,65 +78,74 @@ class Hands_divider:
 				# Search pair from large to small
 				for i in range(12, -1, -1):
 					count = 0
-					for suit in self.suit_correspondence.values:
+					for suit in self.suit_correspondence.values():
 						if suit[i]:
 							count += 1
 					# If a pair is found
 					if count > 1:
 						# Take the pair out and break
-						for key, suit in self.suit_correspondence.items:
+						for key, suit in self.suit_correspondence.items():
 							if suit[i]:
 								pair += [f'{key}{i+1}']
 								suit[i] = False
 						break
 				# Make the four-of-a-kind
 				rest += [f'S{self.four_of_a_kind[0]}', f'H{self.four_of_a_kind[0]}', f'D{self.four_of_a_kind[0]}', f'C{self.four_of_a_kind[0]}']
-				for key, suit in self.suit_correspondence.items:
-					if suit[i]:
-						rest += [f'{key}{i+1}']
-						suit[i] = False
+				for key, suit in self.suit_correspondence.items():
+					for i in range(13):
+						if suit[i]:
+							rest += [f'{key}{i+1}']
+							suit[i] = False
 				# Arrange the four-of-a-kind to go first
 				self.hands = rest[:5] + self.hands + pair
 				# If there are some cards in rest still
 				if len(self.hands) != 13:
 					self.hands += rest[5:]
 			return True
+		# If there are two four-of-a-kind
 		elif len(self.four_of_a_kind) == 2:
+			# Find values of a kind
 			count = [0 for i in range(13)]
 			for i in range(13):
-				for suit in self.suit_correspondence.values:
+				for suit in self.suit_correspondence.values():
 					if suit[i]:
 						count[i] += 1
+			# Find the most number of cards of a kind
 			max_count = max(count)
+			# Find that index
 			max_index = 12
 			while max_index >= 0:
 				if count[max_index] == max_count:
 					break
 				max_index -= 1
+			# Take out the most number of cards of a kind
 			pair = []
-			for key, suit in self.suit_correspondence.items:
+			for key, suit in self.suit_correspondence.items():
 				if suit[max_index] == True:
 					pair += [f'{key}{max_index+1}']
-					suit[max_index] == False
+					suit[max_index] = False
+			# Find the rest cards
 			rest = []
-			for i in range(13):
-				for key, suit in self.suit_correspondence.items:
+			for key, suit in self.suit_correspondence.items():
+				for i in range(13):
 					if suit[i]:
 						rest += [f'{key}{i+1}']
 						suit[i] = False
 			self.hands += [f'S{self.four_of_a_kind[0]}', f'H{self.four_of_a_kind[0]}', f'D{self.four_of_a_kind[0]}', f'C{self.four_of_a_kind[0]}']
-			self.hands += rest[0]
+			self.hands += [rest[0]]
 			self.hands += [f'S{self.four_of_a_kind[1]}', f'H{self.four_of_a_kind[1]}', f'D{self.four_of_a_kind[1]}', f'C{self.four_of_a_kind[1]}']
-			self.hands += rest[1]
+			self.hands += [rest[1]]
 			self.hands += pair
+			# If there are still cards in rest
 			if len(self.hands) != 13:
 				self.hands += rest[2:]
 			return True
 		# If there are three possible four-of-a-kind
 		elif len(self.four_of_a_kind) == 3:
 			self.hands += [f'S{self.four_of_a_kind[0]}', f'H{self.four_of_a_kind[0]}', f'D{self.four_of_a_kind[0]}', f'C{self.four_of_a_kind[0]}']
-			for i in range(13):
-				for key, suit in self.suit_correspondence.items:
+			# Find the last card
+			for key, suit in self.suit_correspondence.items():
+				for i in range(13):
 					if suit[i]:
 						self.hands += [f'{key}{i+1}']
 						suit[i] = False
@@ -163,7 +173,7 @@ class Hands_divider:
 				if card == True:
 					count += 1
 					if count == 5:
-						print(f'Straight Flush from {key}{i-3}')
+						print(f'Straight-flush from {key}{i-3}')
 						self.have_straight_flush = True
 						for j in range(5):
 							hands += [f'{key}{i-3+j}']
@@ -186,12 +196,15 @@ class Hands_divider:
 	def four_of_a_Kind_handler(self):
 		for i in range(12, -1, -1):
 			is_four = True
-			for suit in self.suit_correspondence.values:
+			for suit in self.suit_correspondence.values():
 				if suit[i] == False:
 					is_four = False
 					break
 			if is_four:
+				print("Four-of-a-kind found at", i+1)
 				self.four_of_a_kind += [i+1]
+				for suit in self.suit_correspondence.values():
+					suit[i] = False
 
 	def full_house_handler(self):
 		pass
@@ -226,6 +239,9 @@ class Hands_divider:
 			return self.hands
 		# self.empty_suit_updator()
 		self.four_of_a_Kind_handler()
+		if self.last_hand_checker():
+			self.hands.reverse()
+			return self.hands
 		# self.full_house_handler()
 		# self.flush_handler()
 		# self.straight_handler()
@@ -246,8 +262,10 @@ class Hands_divider:
 		print()
 
 if __name__ == '__main__':
+	# Tested cases: one/two straight-flush, one straight-flush and one four-of-a-kind, two four-of-a-kind, 
 	# cards_divider = Hands_divider(['S13', 'H5', 'C3', 'D9', 'S2', 'H10', 'C8', 'D7', 'S1', 'S3', 'D5', 'H12', 'H11'])
-	cards_divider = Hands_divider(['H13', 'H5', 'C3', 'H9', 'S2', 'H10', 'C8', 'S5', 'S1', 'S3', 'S4', 'H12', 'H11'])
+	# cards_divider = Hands_divider(['H13', 'H5', 'C5', 'H9', 'S2', 'C13', 'C8', 'S5', 'S1', 'S3', 'S4', 'D13', 'S13'])
+	cards_divider = Hands_divider(['H13', 'H5', 'H8', 'H9', 'H1', 'C13', 'C8', 'S5', 'S1', 'D1', 'C1', 'D13', 'S13'])
 	cards_divider.display_cards()
 	print(cards_divider.divide())
 	cards_divider.display_cards()
