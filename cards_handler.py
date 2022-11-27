@@ -1,3 +1,4 @@
+debug = False
 class Hands_divider:
 	#cards is in the form ['S13', 'H5', 'C3', 'D9', ...]
 	#S deotes Spade, H denotes Heart, D denote Diamond, C denotes Club
@@ -35,10 +36,13 @@ class Hands_divider:
 				raise Exception(f'duplicated card "{card}"')
 			suit[value] = True
 
-	def last_hand_checker(self):
+	def four_of_a_kind_handler(self):
+		# Take four of a kind out
 		for i in self.four_of_a_kind:
 			for suit in self.suit_correspondence.values():
 				suit[i-1] = False
+	
+	def last_hand_checker(self):
 		# If there is no four-of-a-kind
 		if len(self.hands) == 10:
 			for key, suit in self.suit_correspondence.items():
@@ -52,20 +56,12 @@ class Hands_divider:
 			pair = []
 			# If there is a straight-flush
 			if self.have_straight_flush:
-				# Search pair from large to small
-				for i in range(12, -1, -1):
-					count = 0
-					for suit in self.suit_correspondence.values():
-						if suit[i]:
-							count += 1
-					# If a pair is found
-					if count > 1:
-						# Take the pair out and break
-						for key, suit in self.suit_correspondence.items():
-							if suit[i]:
-								pair += [f'{key}{i+1}']
-								suit[i] = False
-						break
+				# Take the pair out and break
+				if len(self.pairs) == 1:
+					for key, suit in self.suit_correspondence.items():
+						if suit[self.pairs[0]-1]:
+							pair += [f'{key}{self.pairs[0]}']
+							suit[self.pairs[0]-1] = False
 				# A straight-flush plus the four-of-a-kind
 				self.hands += [f'S{self.four_of_a_kind[0]}', f'H{self.four_of_a_kind[0]}', f'D{self.four_of_a_kind[0]}', f'C{self.four_of_a_kind[0]}']
 				# Plus the rest cards
@@ -80,20 +76,12 @@ class Hands_divider:
 			else:
 				# Should arrange the four-of-a-kind to go first
 				rest = []
-				# Search pair from large to small
-				for i in range(12, -1, -1):
-					count = 0
-					for suit in self.suit_correspondence.values():
-						if suit[i]:
-							count += 1
-					# If a pair is found
-					if count > 1:
-						# Take the pair out and break
-						for key, suit in self.suit_correspondence.items():
-							if suit[i]:
-								pair += [f'{key}{i+1}']
-								suit[i] = False
-						break
+				# Take the pair out
+				if len(self.pairs) == 1:
+					for key, suit in self.suit_correspondence.items():
+						if suit[self.pairs[0]-1]:
+							pair += [f'{key}{self.pairs[0]}']
+							suit[self.pairs[0]-1] = False
 				# Make the four-of-a-kind
 				rest += [f'S{self.four_of_a_kind[0]}', f'H{self.four_of_a_kind[0]}', f'D{self.four_of_a_kind[0]}', f'C{self.four_of_a_kind[0]}']
 				for key, suit in self.suit_correspondence.items():
@@ -109,26 +97,18 @@ class Hands_divider:
 			return True
 		# If there are two four-of-a-kind
 		elif len(self.four_of_a_kind) == 2:
-			# Find values of a kind
-			count = [0 for i in range(13)]
-			for i in range(13):
-				for suit in self.suit_correspondence.values():
-					if suit[i]:
-						count[i] += 1
-			# Find the most number of cards of a kind
-			max_count = max(count)
-			# Find that index
-			max_index = 12
-			while max_index >= 0:
-				if count[max_index] == max_count:
-					break
-				max_index -= 1
 			# Take out the most number of cards of a kind
-			pair = []
-			for key, suit in self.suit_correspondence.items():
-				if suit[max_index] == True:
-					pair += [f'{key}{max_index+1}']
-					suit[max_index] = False
+			a_kind = []
+			if len(self.three_of_a_kind) == 1:
+				for key, suit in self.suit_correspondence.items():
+					if suit[self.three_of_a_kind[0]-1] == True:
+						a_kind += [f'{key}{self.three_of_a_kind[0]}']
+						suit[self.three_of_a_kind[0]-1] = False
+			elif len(self.pairs) != 0:
+				for key, suit in self.suit_correspondence.items():
+					if suit[self.pairs[0]-1] == True:
+						a_kind += [f'{key}{self.pairs[0]}']
+						suit[self.pairs[0]-1] = False
 			# Find the rest cards
 			rest = []
 			for key, suit in self.suit_correspondence.items():
@@ -140,7 +120,7 @@ class Hands_divider:
 			self.hands += [rest[0]]
 			self.hands += [f'S{self.four_of_a_kind[1]}', f'H{self.four_of_a_kind[1]}', f'D{self.four_of_a_kind[1]}', f'C{self.four_of_a_kind[1]}']
 			self.hands += [rest[1]]
-			self.hands += pair
+			self.hands += a_kind
 			# If there are still cards in rest
 			if len(self.hands) != 13:
 				self.hands += rest[2:]
@@ -205,46 +185,150 @@ class Hands_divider:
 				if suit[i]:
 					count += 1
 			if count == 4:
-				print("Four-of-a-kind found at", i+1)
+				print("Four-of-a-kind at", i+1)
 				self.four_of_a_kind += [i+1]
 			if count == 3:
-				print("Three-of-a-kind found at", i+1)
+				print("Three-of-a-kind at", i+1)
 				self.three_of_a_kind += [i+1]
 			if count == 2:
-				print("pair found at", i+1)
+				print("pair at", i+1)
 				self.pairs += [i+1]
 		return self.four_of_a_kind, self.three_of_a_kind, self.pairs
 
 	def full_house_handler(self):
-		for i in range(12, -1, -1):
-			count = 0
-			for suit in self.suit_correspondence.values():
-				if suit[i]:
-					count += 1
-			if count == 3:
-				self.three_of_a_kind += [i]
-				if len(self.three_of_a_kind) == 2:
-					break
-		for suit in self.suit_correspondence.values():
-			for i in self.three_of_a_kind:
-				if suit[i]:
-					suit[i] = False
+		# Find possible full-house
+		number = min(len(self.three_of_a_kind), len(self.pairs))
+		# Take out full-house
+		for i in range(number):
+			for key, suit in self.suit_correspondence.items():
+				# Take three-of-a-kind from large side
+				if suit[self.three_of_a_kind[i]-1]:
+					self.hands += [f'{key}{self.three_of_a_kind[i]}']
+					suit[self.three_of_a_kind[i]-1] = False
+				# Take pairs from small side
+				if suit[self.pairs[-(i+1)]-1]:
+					self.hands += [f'{key}{self.pairs[-(i+1)]}']
+					suit[self.pairs[-(i+1)]-1] = False
+
+		# Delete those being taken out
+		if len(self.three_of_a_kind) == number:
+			self.three_of_a_kind = []
+		else:
+			self.three_of_a_kind = self.three_of_a_kind[number:]
+		if len(self.pairs) == number:
+			self.pairs = []
+		else:
+			self.pairs = self.pairs[:len(self.pairs)-number]
 		
-				# If no pairs
 
 	def flush_handler(self):
-		pass
+		suit_checked = []
+		# Find flush from large to small
+		for i in range(12, -1, -1):
+			for key, suit in self.suit_correspondence.items():
+				# If the suit is not checked
+				if suit[i] and key not in suit_checked:
+					# Count the number of cards of the same suit
+					count = 0
+					for card in suit:
+						if card:
+							count += 1
+					# If count is equal to 5
+					if count == 5:
+						for j in range(i, -1, -1):
+							if suit[j]:
+								self.hands += [f'{key}{j+1}']
+								suit[j] = False
+								if j+1 in self.pairs:
+									self.pairs.remove(j+1)
+								elif j+1 in self.three_of_a_kind:
+									self.three_of_a_kind.remove(j+1)
+					# If count is greater than 5
+					elif count > 5:
+						# Take out the largest one
+						self.hands += [f'{key}{i+1}']
+						suit[i] = False
+						# First round: Skip the cards forming a pair/three-of-a-kind
+						for j in range(i):
+							if suit[j]:
+								# Skip the cards forming a pair/three-of-a-kind
+								if j+1 not in self.three_of_a_kind and j+1 not in self.pairs:
+									self.hands += [f'{key}{j+1}']
+									suit[j] = False
+									# Already get five cards
+									if len(self.hands) % 5 == 0:
+										break
+						# Second round: Skip the cards forming a three-of-a-kind
+						if len(self.hands) % 5 != 0:
+							for j in range(i):
+								if suit[j]:
+									# Skip the cards forming a three-of-a-kind
+									if j+1 not in self.three_of_a_kind:
+										self.hands += [f'{key}{j+1}']
+										suit[j] = False
+										self.pairs.remove(j+1)
+										# Already get five cards
+										if len(self.hands) % 5 == 0:
+											break
+						# Third round: Take card no matter what
+						if len(self.hands) % 5 != 0:
+							for j in range(i):
+								if suit[j]:
+									# Take the card out
+									self.hands += [f'{key}{j+1}']
+									suit[j] = False
+									self.three_of_a_kind.remove(j+1)
+									for k, m in enumerate(self.pairs):
+										if m < j+1:
+											self.pairs.insert(k, j+1)
+											break
+									# Already get five cards
+									if len(self.hands) % 5 == 0:
+										break
+					suit_checked += [key]
 
 	def straight_handler(self):
-		pass
+		# Remember to delete three of a kind
+		record = [False for i in range(13)]
+		for i in range(12, -1, -1):
+			for key, suit in self.suit_correspondence.items():
+				if suit[i]:
+					record[i] = True
+		count = 0
+		for i in range(12, -1, -1):
+			if record[i]:
+				count += 1
+			else:
+				count = 0
+			if count == 5:
+				for j in range(5):
+					for key, suit in self.suit_correspondence.items():
+						if suit[i+j]:
+							self.hands += [f'{key}{i+j+1}']
+							suit[i+j] = False
+							if i+j+1 in self.three_of_a_kind:
+								self.three_of_a_kind.remove(i+j+1)
+								for k, m in enumerate(self.pairs):
+									if m < i+j+1:
+										self.pairs.insert(k, i+j+1)
+										break
+								if self.pairs == []:
+									self.pairs = [i+j+1]
+							elif i+j+1 in self.pairs:
+								self.pairs.remove(i+j+1)
+							break
+				count = 0
 
 	def three_of_a_kind_handler(self):
+		# Remember to delete three of a kind
 		pass
 
 	def pairs_handler(self):
+		# Remember to delete three of a kind
 		pass
 
 	def high_card_handler(self):
+		# Remember to delete three of a kind
 		pass
 
 	def card_comparator(self, card1, card2):
@@ -256,15 +340,44 @@ class Hands_divider:
 			return 0 if card1[0] > card2[0] else 1
 
 	def divide(self):
-		self.same_kind_finder()
 		self.straight_flush_handler()
 		if self.last_hand_checker():
 			self.hands.reverse()
 			return self.hands
-		# self.empty_suit_updator()
-		# self.full_house_handler()
-		# self.flush_handler()
-		# self.straight_handler()
+		
+		self.same_kind_finder()
+		self.four_of_a_kind_handler()
+		if self.last_hand_checker():
+			self.hands.reverse()
+			return self.hands
+
+		if debug:
+			print("p:", cards_divider.pairs)
+			print("t:", cards_divider.three_of_a_kind)
+		self.full_house_handler()
+		if self.last_hand_checker():
+			self.hands.reverse()
+			return self.hands
+
+		if debug:
+			print("p:", cards_divider.pairs)
+			print("t:", cards_divider.three_of_a_kind)
+		self.flush_handler()
+		if self.last_hand_checker():
+			self.hands.reverse()
+			return self.hands
+		
+		if debug:
+			print("p:", cards_divider.pairs)
+			print("t:", cards_divider.three_of_a_kind)
+		self.straight_handler()
+		if debug:
+			print("p:", cards_divider.pairs)
+			print("t:", cards_divider.three_of_a_kind)
+		if self.last_hand_checker():
+			self.hands.reverse()
+			return self.hands
+
 		# self.three_of_a_kind_handler()
 		'''
 		These two can be combined
@@ -282,11 +395,18 @@ class Hands_divider:
 		print()
 
 if __name__ == '__main__':
-	# Tested cases: one/two straight-flush, one straight-flush and one four-of-a-kind, two four-of-a-kind, 
+	# Tested cases: one/two straight-flush, one straight-flush and one four-of-a-kind, two four-of-a-kind, one full-house and a four-of-a-kind, two full-house, one/two flush
 	# cards_divider = Hands_divider(['S13', 'H5', 'C3', 'D9', 'S2', 'H10', 'C8', 'D7', 'S1', 'S3', 'D5', 'H12', 'H11'])
-	# cards_divider = Hands_divider(['H13', 'H5', 'C5', 'H9', 'S2', 'C13', 'C8', 'S5', 'S1', 'S3', 'S4', 'D13', 'S13'])
-	cards_divider = Hands_divider(['H13', 'H5', 'H8', 'H9', 'H1', 'C13', 'C8', 'S5', 'S1', 'D1', 'C1', 'D13', 'S13'])
+	# cards_divider = Hands_divider(['H13', 'H5', 'C9', 'H9', 'S2', 'H12', 'C8', 'S5', 'S1', 'S3', 'S4', 'H10', 'H11'])
+	# cards_divider = Hands_divider(['H13', 'H5', 'C9', 'H9', 'S2', 'C13', 'C8', 'S5', 'S1', 'S3', 'S4', 'D13', 'S13'])
+	# cards_divider = Hands_divider(['H13', 'H5', 'H8', 'H9', 'H1', 'C13', 'C8', 'S5', 'S1', 'D1', 'C1', 'D13', 'S13'])
+	# cards_divider = Hands_divider(['H13', 'H5', 'C5', 'H9', 'H1', 'C13', 'D5', 'S5', 'S1', 'D1', 'C1', 'D13', 'S13'])
+	# cards_divider = Hands_divider(['H13', 'H5', 'H8', 'H9', 'H1', 'C9', 'C8', 'S5', 'S1', 'D1', 'C2', 'D13', 'S13'])
+	# cards_divider = Hands_divider(['H13', 'H5', 'H8', 'H9', 'H1', 'C9', 'C8', 'C5', 'C1', 'C13', 'H2', 'H4', 'H7'])
+	cards_divider = Hands_divider(['S13', 'H5', 'C5', 'D9', 'S2', 'H10', 'C4', 'D7', 'S1', 'S3', 'D5', 'H12', 'H11'])
 	cards_divider.display_cards()
-	# print(cards_divider.same_kind_finder())
 	print(cards_divider.divide())
 	cards_divider.display_cards()
+	if debug:
+		print("p:", cards_divider.pairs)
+		print("t:", cards_divider.three_of_a_kind)
