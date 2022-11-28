@@ -1,3 +1,4 @@
+import random
 debug = False
 class Hands_divider:
 	#cards is in the form ['S13', 'H5', 'C3', 'D9', ...]
@@ -487,6 +488,17 @@ class Hands_divider:
 					print(f'{key}{i+1}', end=' ')
 		print()
 
+def random_samples():
+	suits = ['S', 'H', 'D', 'C']
+	values = [f'{i+1}' for i in range(13)]
+	cards = []
+	card = ''
+	while len(cards) != 13:
+		card = random.choice(suits) + random.choice(values)
+		if card not in cards:
+			cards += [card]
+	return cards
+
 if __name__ == '__main__':
 	# Tested cases: one/two straight-flush, one straight-flush and one four-of-a-kind, two four-of-a-kind, one full-house and a four-of-a-kind, two full-house, one/two flush...
 	# cards_divider = Hands_divider(['S13', 'H5', 'C3', 'D9', 'S2', 'H10', 'C8', 'D7', 'S1', 'S3', 'D5', 'H12', 'H11'])
@@ -498,7 +510,8 @@ if __name__ == '__main__':
 	# cards_divider = Hands_divider(['H13', 'H5', 'H8', 'H9', 'H1', 'C9', 'C8', 'C5', 'C1', 'C13', 'H2', 'H4', 'H7'])
 	# cards_divider = Hands_divider(['S13', 'H5', 'C5', 'D9', 'S2', 'H10', 'C4', 'D7', 'S1', 'S3', 'D5', 'H12', 'H11'])
 	# cards_divider = Hands_divider(['C13', 'H4', 'H6', 'H7', 'H1', 'C9', 'C11', 'S7', 'S1', 'D1', 'C2', 'D13', 'S13'])
-	cards_divider = Hands_divider(['S13', 'H7', 'C3', 'D13', 'S2', 'H2', 'C8', 'D8', 'S1', 'S3', 'D5', 'H1', 'H11'])
+	# cards_divider = Hands_divider(['S13', 'H7', 'C3', 'D13', 'S2', 'H2', 'C8', 'D8', 'S1', 'S3', 'D5', 'H1', 'H11'])
+	cards_divider = Hands_divider(random_samples())
 	cards_divider.display_cards()
 	print(cards_divider.divide())
 	cards_divider.display_cards()
